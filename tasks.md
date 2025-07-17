@@ -11,6 +11,7 @@
 ## ✅ Completed Tasks
 
 ### Phase 1: Initial Setup & Exploration
+
 - [x] **Set up WhisperKit for French audio transcription** (Dec 2024)
   - [x] Configure Poetry package management
   - [x] Test tiny model for optimal performance
@@ -18,6 +19,7 @@
   - [x] Optimize for speed (avoid hanging on large models)
 
 ### Phase 2: Book Formatting Pipeline Development
+
 - [x] **Manual Unit 1 completion** as reference template
 - [x] **Mistral API integration** for book formatting
   - [x] Create initial book formatter using Mistral API
@@ -25,7 +27,9 @@
   - [x] Identify content loss issues (missing English translations)
 
 ### Phase 3: OCR Implementation & Testing
+
 - [x] **Mistral OCR integration** for proper PDF extraction
+
   - [x] Implement PDF to image conversion pipeline
   - [x] Test OCR accuracy on sample pages
   - [x] Discover API authentication issues
@@ -37,13 +41,16 @@
   - [x] Test on complex textbook layouts
 
 ### Phase 4: Model Comparison & Analysis
+
 - [x] **Comprehensive OCR model testing**
+
   - [x] Test Gemini 2.5-Pro, 2.5-Flash, and 2.0-Flash on 5 pages
   - [x] Implement unified comparison framework
   - [x] Analyze accuracy vs speed trade-offs
   - [x] Document results: 2.5-Pro (74% accuracy, 47.7s) vs 2.5-Flash (63% accuracy, 13.6s)
 
 - [x] **Quality gap analysis**
+
   - [x] Investigate 25% difference between Pro and Flash models
   - [x] Determine gap is mostly formatting, not content accuracy
   - [x] Conclude Flash model sufficient for production use
@@ -54,7 +61,9 @@
   - [x] Conclude hybrid approach impractical for large documents
 
 ### Phase 5: Pipeline Optimization
+
 - [x] **Intelligent OCR prompting**
+
   - [x] Design prompt to merge paragraph lines automatically
   - [x] Instruct model to skip page headers
   - [x] Preserve French formatting and textbook structure
@@ -68,7 +77,9 @@
   - [x] Handle split formatting repair (bold/italic across lines)
 
 ### Phase 6: Production Testing & Documentation
+
 - [x] **Unit 2 full processing test** (21 pages, pages 20-40)
+
   - [x] Baseline test: 81.6s processing, 220 paragraph merges needed
   - [x] Optimized test: 25.9s processing, 29 paragraph merges needed
   - [x] Document 90% reduction in manual editing work
@@ -85,7 +96,9 @@
 ## 🎯 Upcoming Tasks
 
 ### Phase 7: Production Scaling
+
 - [ ] **Full textbook processing**
+
   - [ ] Process Unit 3 (test next unit)
   - [ ] Process Units 4-6 (test batch processing)
   - [ ] Process Units 7-16 (complete remaining book)
@@ -98,7 +111,9 @@
   - [ ] Create processing queue management
 
 ### Phase 8: Quality Improvements
+
 - [ ] **Table formatting enhancement**
+
   - [ ] Detect verb conjugation tables automatically
   - [ ] Implement 2-column table formatting
   - [ ] Test on "être", "avoir", and "-er verb" tables
@@ -111,7 +126,9 @@
   - [ ] Preserve dialogue indentation
 
 ### Phase 9: Generalization & Reusability
+
 - [ ] **Book-agnostic pipeline**
+
   - [ ] Extract textbook-specific logic into configurations
   - [ ] Create language-agnostic processing options
   - [ ] Test on other language textbooks
@@ -124,7 +141,9 @@
   - [ ] Build regression testing framework
 
 ### Phase 10: Distribution & Documentation
+
 - [ ] **User-friendly packaging**
+
   - [ ] Create CLI tool with argument parsing
   - [ ] Add configuration file support
   - [ ] Implement logging and error handling
@@ -141,18 +160,21 @@
 ## 🔧 Technical Debt & Improvements
 
 ### Code Quality
+
 - [ ] Add comprehensive unit tests
 - [ ] Implement error handling for edge cases
 - [ ] Add type hints throughout codebase
 - [ ] Create proper Python package structure
 
 ### Documentation
+
 - [ ] Add API documentation for all functions
 - [ ] Create troubleshooting guide
 - [ ] Document configuration options
 - [ ] Add examples for different use cases
 
 ### Monitoring & Analytics
+
 - [ ] Add processing time analytics
 - [ ] Track accuracy metrics over time
 - [ ] Monitor API usage and costs
@@ -163,6 +185,7 @@
 ## 📈 Success Metrics
 
 **Current Achievements:**
+
 - ✅ 90% reduction in manual editing work
 - ✅ 87% reduction in paragraph merging needed
 - ✅ 68% faster processing time
@@ -170,6 +193,7 @@
 - ✅ Stable, production-ready pipeline
 
 **Future Targets:**
+
 - [ ] Process complete 16-unit textbook (Est. 320+ pages)
 - [ ] Maintain <5% manual editing requirement
 - [ ] Process full unit in <30 minutes

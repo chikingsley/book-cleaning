@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv add:*)",
+      "Bash(uv run ruff check:*)",
+      "Bash(uv run mypy:*)",
+      "Bash(python:*)",
+      "Bash(cat:*)",
+      "Bash(uv run ruff format:*)",
+      "Bash(grep:*)",
+      "Bash(ruff check:*)",
+      "Bash(uv run rg:*)",
+      "Bash(find:*)"
+    ],
+    "deny": []
+  }
+}

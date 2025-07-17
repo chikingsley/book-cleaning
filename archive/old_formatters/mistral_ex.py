@@ -4,22 +4,21 @@ Analyzes Pimsleur lesson transcripts with chunked batch processing and real-time
 V2: Robust, resumable extraction with state-of-the-art CLI visualization.
 """
 
-import os
+import csv
 import json
+import os
 import pathlib
+import re
 import sys
 import time
-import re
-from typing import List, Optional, TypedDict
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from typing import TypedDict
 
+import spacy
+from alive_progress import alive_bar  # type: ignore
 from dotenv import load_dotenv
 from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage
-import spacy
-from alive_progress import alive_bar  # type: ignore
-
-import csv
 
 load_dotenv()
 
@@ -70,7 +69,7 @@ class UtteranceBatch:
     """Represents a batch of utterances to process."""
 
     batch_id: int
-    utterances: List[Utterance]
+    utterances: list[Utterance]
     start_position: int
     end_position: int
 
@@ -83,9 +82,9 @@ class UtteranceRecord:
     position_in_lesson: int
     speaker: str
     text: str
-    utterance_type: Optional[str]
-    narrator_cue: Optional[str]
-    core_lemmas: Optional[str]
+    utterance_type: str | None
+    narrator_cue: str | None
+    core_lemmas: str | None
 
 
 @dataclass
@@ -99,7 +98,7 @@ class ProcessingStatus:
     processed_utterances: int = 0
     failed_utterances: int = 0
     start_time: float = 0.0
-    current_batch: Optional[int] = None
+    current_batch: int | None = None
     current_model: str = ""
     last_utterance: str = ""
 
@@ -107,11 +106,11 @@ class ProcessingStatus:
 # ----- Transcript Parsing --------------------------------------------------
 def parse_transcript_to_batches(
     transcript: str, batch_size: int = BATCH_SIZE
-) -> List[UtteranceBatch]:
+) -> list[UtteranceBatch]:
     """Parse transcript into batches of utterances."""
-    utterances: List[Utterance] = []
+    utterances: list[Utterance] = []
     current_speaker = None
-    current_text: List[str] = []
+    current_text: list[str] = []
 
     lines = transcript.strip().split("\n")
     position = 0
@@ -166,7 +165,7 @@ def parse_transcript_to_batches(
             )
 
     # Create batches
-    batches: List[UtteranceBatch] = []
+    batches: list[UtteranceBatch] = []
     for i in range(0, len(utterances), batch_size):
         batch_utterances = utterances[i : i + batch_size]
         if batch_utterances:
@@ -184,7 +183,7 @@ def parse_transcript_to_batches(
 # ----- Batch Processing ----------------------------------------------------
 def process_batch_with_llm(
     batch: UtteranceBatch, lesson_number: int, model_name: str
-) -> List[UtteranceRecord]:
+) -> list[UtteranceRecord]:
     """Process a single batch of utterances with the LLM."""
 
     # Create a mini-transcript for this batch
@@ -238,7 +237,7 @@ Return a JSON object with key "analyzed_utterances" containing a list of utteran
         # Convert to UtteranceRecord objects
         utterances = []
         for idx, (item, original) in enumerate(
-            zip(analyzed_utterances, batch.utterances)
+            zip(analyzed_utterances, batch.utterances, strict=False)
         ):
             if not isinstance(item, dict):
                 print(
@@ -266,7 +265,7 @@ Return a JSON object with key "analyzed_utterances" containing a list of utteran
 
 
 # ----- CSV Writer ----------------------------------------------------------
-def write_to_csv(utterances: List[UtteranceRecord], output_path: pathlib.Path):
+def write_to_csv(utterances: list[UtteranceRecord], output_path: pathlib.Path):
     """Write utterances to CSV file."""
     with open(output_path, "w", newline="", encoding="utf-8") as csvfile:
         fieldnames = [

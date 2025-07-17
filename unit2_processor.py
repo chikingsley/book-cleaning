@@ -4,64 +4,67 @@ Process Unit 2 with improved OCR prompting and post-processing
 Optimized for Gemini 2.5-Flash with better paragraph handling
 """
 
-from pathlib import Path
-import fitz  # PyMuPDF
-from PIL import Image
-import io
 import base64
-import google.generativeai as genai
-from datetime import datetime
+import io
 import json
-from alive_progress import alive_bar
 import os
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+import fitz  # PyMuPDF
+import google.generativeai as genai
+from alive_progress import alive_bar
 from dotenv import load_dotenv
+from PIL import Image
+
 from markdown_post_processor import MarkdownPostProcessor
 
 # Load environment variables
 load_dotenv()
 
 class Unit2ProcessorV2:
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize with Gemini 2.5-Flash"""
-        
+
         # Configure Gemini
         api_key = os.getenv('GOOGLE_API_KEY')
         if not api_key:
             raise ValueError("Please set GOOGLE_API_KEY in .env file")
-        
+
         genai.configure(api_key=api_key)
-        
+
         # Use Gemini 2.5-Flash for optimal speed/quality
         self.model = genai.GenerativeModel('gemini-2.5-flash')
-        
+
         # Create session directory
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.session_dir = Path("formatted_output") / f"unit2_flash_v2_{timestamp}"
         self.session_dir.mkdir(parents=True, exist_ok=True)
-        
-        print(f"✅ Unit 2 Processor V2 initialized")
-        print(f"🚀 Using Gemini 2.5-Flash with improved prompting")
+
+        print("✅ Unit 2 Processor V2 initialized")
+        print("🚀 Using Gemini 2.5-Flash with improved prompting")
         print(f"📁 Session: {self.session_dir}")
-    
-    def convert_pdf_to_images_batch(self, pdf_path: Path, start_page: int, end_page: int):
+
+    def convert_pdf_to_images_batch(self, pdf_path: Path, start_page: int, end_page: int) -> list[Path] | None:
         """Convert PDF pages to images in batches"""
-        
+
         all_image_paths = []
-        
+
         # Process in batches of 10 for memory efficiency
         batch_size = 10
         total_pages = end_page - start_page + 1
-        
+
         print(f"\n📷 Converting {total_pages} pages to images...")
-        
+
         with alive_bar(total_pages, title="📷 Converting pages", spinner="waves") as bar:
             for batch_start in range(start_page, end_page + 1, batch_size):
                 batch_end = min(batch_start + batch_size - 1, end_page)
-                
+
                 try:
                     # Open PDF for this batch
                     pdf = fitz.open(pdf_path)
-                    
+
                     # Convert batch
                     images = []
                     for page_num in range(batch_start - 1, batch_end):
@@ -73,9 +76,9 @@ class Unit2ProcessorV2:
                             img_data = pix.tobytes("png")
                             img = Image.open(io.BytesIO(img_data))
                             images.append(img)
-                    
+
                     pdf.close()
-                    
+
                     # Save images
                     for i, img in enumerate(images):
                         page_num = batch_start + i
@@ -83,20 +86,20 @@ class Unit2ProcessorV2:
                         img.save(img_path, "PNG", optimize=True)
                         all_image_paths.append(img_path)
                         bar()
-                    
+
                     # Clear memory
                     del images
-                    
+
                 except Exception as e:
                     print(f"\n❌ Error converting pages {batch_start}-{batch_end}: {e}")
                     return None
-        
+
         print(f"✅ Converted {len(all_image_paths)} pages")
         return all_image_paths
-    
-    def process_pages_in_batches(self, image_paths, batch_size=5):
+
+    def process_pages_in_batches(self, image_paths: list[Path], batch_size: int = 5) -> list[dict[str, Any]]:
         """Process pages in optimal batches for Gemini 2.5-Flash"""
-        
+
         # IMPROVED instruction for better paragraph handling
         instruction = """
 EDUCATIONAL OCR TASK: Extract text from these French language textbook pages.
@@ -136,20 +139,20 @@ Output:
 "Elle habite en Angleterre, à Coventry."
 
 Extract all visible text following these rules."""
-        
+
         # Process in batches
         results = []
         total_batches = (len(image_paths) + batch_size - 1) // batch_size
-        
+
         print(f"\n🔍 Processing {len(image_paths)} pages in {total_batches} batches...")
-        
+
         with alive_bar(total_batches, title="🚀 OCR Processing", spinner="waves") as bar:
             for i in range(0, len(image_paths), batch_size):
                 batch_images = image_paths[i:i + batch_size]
                 batch_num = (i // batch_size) + 1
-                
+
                 print(f"\n📖 Batch {batch_num}/{total_batches} ({len(batch_images)} pages)")
-                
+
                 try:
                     # Convert images to base64
                     image_parts = []
@@ -160,14 +163,14 @@ Extract all visible text following these rules."""
                                 "mime_type": "image/png",
                                 "data": image_data
                             })
-                    
+
                     # Create prompt with all images
-                    prompt_parts = [instruction]
+                    prompt_parts: list[str | dict[str, Any]] = [instruction]
                     prompt_parts.extend([{"inline_data": img} for img in image_parts])
-                    
+
                     # Process with Gemini
                     response = self.model.generate_content(prompt_parts)
-                    
+
                     if response.text:
                         results.append({
                             "batch": batch_num,
@@ -180,48 +183,48 @@ Extract all visible text following these rules."""
                         print(f"✅ Batch {batch_num} complete")
                     else:
                         print(f"⚠️ Batch {batch_num} returned empty")
-                    
+
                 except Exception as e:
                     print(f"❌ Error processing batch {batch_num}: {e}")
                     results.append({
                         "batch": batch_num,
                         "error": str(e)
                     })
-                
+
                 bar()
-        
+
         return results
-    
-    def save_results(self, results, pdf_path):
+
+    def save_results(self, results: list[dict[str, Any]], pdf_path: Path) -> tuple[Path, Path]:
         """Save OCR results and apply post-processing"""
-        
+
         # Combine all text
         all_text = []
         for batch in results:
             if "text" in batch and batch["text"]:
                 all_text.append(batch["text"])
-        
+
         combined_text = "\n\n".join(all_text)
-        
+
         # Save raw OCR output
-        raw_file = self.session_dir / f"unit2_raw_ocr_v2.md"
+        raw_file = self.session_dir / "unit2_raw_ocr_v2.md"
         with open(raw_file, 'w', encoding='utf-8') as f:
             f.write(combined_text)
-        
+
         print(f"\n📝 Saved raw OCR to: {raw_file.name}")
-        
+
         # Apply post-processing
         print("\n🔧 Applying post-processing...")
         processor = MarkdownPostProcessor()
         cleaned_file = processor.process_file(raw_file)
-        
+
         # Save final formatted version
         final_file = self.session_dir / f"Unit2_{pdf_path.stem}_formatted_v2.md"
-        with open(cleaned_file, 'r', encoding='utf-8') as f:
+        with open(cleaned_file, encoding='utf-8') as f:
             final_content = f.read()
         with open(final_file, 'w', encoding='utf-8') as f:
             f.write(final_content)
-        
+
         # Save processing results
         results_data = {
             "timestamp": datetime.now().isoformat(),
@@ -236,59 +239,59 @@ Extract all visible text following these rules."""
             "post_processing_stats": processor.stats,
             "batches": results
         }
-        
+
         results_file = self.session_dir / "processing_results_v2.json"
         with open(results_file, 'w', encoding='utf-8') as f:
             json.dump(results_data, f, indent=2, ensure_ascii=False)
-        
+
         return final_file, results_file
-    
-    def process_unit2(self, pdf_path: Path, start_page=20, end_page=40):
+
+    def process_unit2(self, pdf_path: Path, start_page: int = 20, end_page: int = 40) -> tuple[Path, Path] | tuple[None, None]:
         """Main processing pipeline for Unit 2"""
-        
+
         print(f"\n🚀 Processing Unit 2 of {pdf_path.name}")
         print("=" * 60)
         print(f"📄 PDF: {pdf_path}")
         print(f"📖 Pages: {start_page}-{end_page}")
-        print(f"🤖 Model: Gemini 2.5-Flash (with improved prompting)")
-        print(f"🔧 Post-processing: Enabled")
-        
+        print("🤖 Model: Gemini 2.5-Flash (with improved prompting)")
+        print("🔧 Post-processing: Enabled")
+
         # Convert pages to images
         image_paths = self.convert_pdf_to_images_batch(pdf_path, start_page, end_page)
         if not image_paths:
             print("❌ Failed to convert PDF to images")
             return None, None
-        
+
         # Process with OCR
         results = self.process_pages_in_batches(image_paths, batch_size=5)
-        
+
         # Save results with post-processing
         formatted_file, results_file = self.save_results(results, pdf_path)
-        
-        print(f"\n✅ Processing complete!")
+
+        print("\n✅ Processing complete!")
         print(f"📄 Final output: {formatted_file}")
         print(f"📊 Results: {results_file}")
-        
+
         return formatted_file, results_file
 
 
-def main():
+def main() -> None:
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='Process Unit 2 with improved OCR and post-processing')
     parser.add_argument('pdf_file', help='Path to the PDF file')
     parser.add_argument('--start-page', type=int, default=20, help='Start page (default: 20)')
     parser.add_argument('--end-page', type=int, default=40, help='End page (default: 40)')
-    
+
     args = parser.parse_args()
-    
+
     processor = Unit2ProcessorV2()
     pdf_path = Path(args.pdf_file)
-    
+
     if not pdf_path.exists():
         print(f"❌ PDF file not found: {pdf_path}")
         return
-    
+
     processor.process_unit2(pdf_path, args.start_page, args.end_page)
 
 

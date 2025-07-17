@@ -12,10 +12,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from book_cleaning.book_formatter_v2 import BookFormatterV2
 
+
 class ExampleBasedFormatter(BookFormatterV2):
-    def create_enhanced_formatting_prompt(self, config):
+    def create_enhanced_formatting_prompt(self, _config):
         """Create prompt with exact examples"""
-        
+
         return '''You are formatting a French language textbook. Apply ONLY formatting, never change content.
 
 EXAMPLE TRANSFORMATIONS:
@@ -83,13 +84,13 @@ def main():
     if not os.getenv("MISTRAL_API_KEY"):
         print("❌ Please set MISTRAL_API_KEY environment variable")
         return
-    
+
     # Test just page 20 first
     pdf_path = Path("Colloquial French 1.pdf").resolve()
     config_path = Path("smart_config.yaml").resolve()
-    
+
     formatter = ExampleBasedFormatter(pdf_path, "./formatted_output")
-    
+
     result = formatter.process_with_pipeline(
         mode="sample",
         start_page=20,
@@ -97,7 +98,7 @@ def main():
         config_path=str(config_path),
         preview=False
     )
-    
+
     print(f"✅ Example-based result: {result}")
 
 if __name__ == "__main__":

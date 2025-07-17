@@ -12,12 +12,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from book_cleaning.book_formatter_v2 import BookFormatterV2
 
+
 class PreciseFormatter(BookFormatterV2):
     def create_enhanced_formatting_prompt(self, config):
         """Create very precise formatting prompt"""
-        
+
         book_info = config.get('book_info', {})
-        
+
         prompt = f"""You are formatting a {book_info.get('type', 'textbook')} in {book_info.get('language', 'unknown language')}.
 
 CRITICAL PRESERVATION RULES:
@@ -61,7 +62,7 @@ EXACT FORMATTING RULES:
 CRITICAL: You are a FORMATTER, not a translator or editor. PRESERVE the exact content and structure.
 
 Format this text:"""
-        
+
         return prompt
 
 
@@ -70,25 +71,25 @@ def main():
     if not os.getenv("MISTRAL_API_KEY"):
         print("❌ Please set MISTRAL_API_KEY environment variable")
         return
-    
+
     # Paths
     pdf_path = Path("Colloquial French 1.pdf").resolve()
     config_path = Path("improved_config.yaml").resolve()
-    
+
     if not pdf_path.exists():
         print(f"❌ PDF not found: {pdf_path}")
         return
-        
+
     if not config_path.exists():
         print(f"❌ Config not found: {config_path}")
         return
-    
+
     print(f"📄 PDF: {pdf_path}")
     print(f"📋 Config: {config_path}")
-    
+
     # Create precise formatter
     formatter = PreciseFormatter(pdf_path, "./formatted_output")
-    
+
     # Test same pages with precise instructions
     result = formatter.process_with_pipeline(
         mode="sample",
@@ -97,7 +98,7 @@ def main():
         config_path=str(config_path),
         preview=False
     )
-    
+
     print(f"✅ Precise result: {result}")
 
 if __name__ == "__main__":

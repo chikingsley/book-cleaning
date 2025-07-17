@@ -4,7 +4,6 @@ Simple wrapper for book_formatter_v2.py with better path handling
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add parent directory to Python path
