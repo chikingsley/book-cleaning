@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+
+# Project specific
+new-new-new/Dolphin-Github/
+new-new-new/Dolphin/
+OCRFlux-3B/
+processed_papers/
+formatted_output/
+
+# Lock files
+uv.lock
+poetry.lock
+
+# PDF files
+*.pdf
